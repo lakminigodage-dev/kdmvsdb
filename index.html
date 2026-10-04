@@ -17,16 +17,28 @@
   input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--green);outline-offset:1px}
   button{font:inherit;padding:10px 18px;border:0;border-radius:6px;background:var(--green);color:#fff;cursor:pointer;margin-top:14px}
   button.ghost{background:transparent;color:var(--green);border:1px solid var(--green)}
+  button.danger{background:var(--err)}
+  button.sm{padding:6px 12px;margin:0;font-size:.9rem}
   .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
   .top button{margin:0}
+  .row{display:flex;gap:8px}
+  .row input{flex:1}
+  .row button{margin-top:0}
   .msg{margin-top:10px;font-size:.9rem}
   .err{color:var(--err)} .ok{color:var(--green)}
-  .stu{border-top:1px solid var(--line);padding:12px 0}
-  .stu:first-child{border-top:0}
-  .stu b{font-size:1.05rem}
   .meta{color:var(--muted);font-size:.9rem}
   .hide{display:none}
   .setup code{background:#eef3ef;padding:2px 5px;border-radius:4px}
+  /* popup */
+  .overlay{position:fixed;inset:0;background:rgba(20,35,28,.55);display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;z-index:10}
+  .modal{background:var(--card);border-radius:12px;width:100%;max-width:640px;margin:auto;padding:16px}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding-bottom:10px}
+  .modal-head h2{font-size:1.1rem;margin:0}
+  .modal-head button{margin:0}
+  .stu{border-bottom:1px solid var(--line);padding:12px 0}
+  .stu:last-child{border-bottom:0}
+  .stu b{font-size:1.05rem}
+  .acts{display:flex;gap:8px;margin-top:8px}
 </style>
 </head>
 <body>
@@ -52,7 +64,11 @@
 
     <div class="card">
       <label for="q" style="margin-top:0">සොයන්න (නම / දුරකථන / ලිපිනය)</label>
-      <input id="q" type="search" placeholder="උදා: නිමල්">
+      <div class="row">
+        <input id="q" type="search" placeholder="උදා: නිමල්">
+        <button id="searchBtn" type="button">සොයන්න</button>
+      </div>
+      <div id="searchMsg" class="msg err"></div>
     </div>
 
     <div class="card">
@@ -72,11 +88,6 @@
         <div id="saveMsg" class="msg"></div>
       </form>
     </div>
-
-    <div class="card">
-      <div id="count" class="meta"></div>
-      <div id="list"></div>
-    </div>
   </section>
 
   <!-- Setup warning -->
@@ -86,30 +97,41 @@
   </section>
 </div>
 
+<!-- Search results popup -->
+<div id="popup" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="popTitle">සෙවුම් ප්‍රතිඵල</h2>
+      <button id="closeBtn" class="ghost sm" type="button">වසන්න</button>
+    </div>
+    <div id="popMsg" class="msg"></div>
+    <div id="list"></div>
+  </div>
+</div>
+
 <script>
-  // ▼▼ ඔබේ Supabase project අගයන් මෙහි දමන්න (Project Settings → API) ▼▼
+  // ▼▼ ඔබේ Supabase project අගයන් ▼▼
   const SUPABASE_URL = "https://nnnizmcmjpnrwcyydgdh.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ubml6bWNtanBucndjeXlkZ2RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNjM0NTksImV4cCI6MjEwNjYzOTQ1OX0.ziYPd6xfKapUvbKQLtOzU_XiW2j8vFv6jn0mHEbzmbM";
-  // ▲▲ (anon key පමණක් භාවිතා කරන්න; service_role key කිසි විටෙකත් නොදමන්න) ▲▲
+  // ▲▲ (anon key පමණක්; service_role key කිසි විටෙකත් නොදමන්න) ▲▲
 
   const $ = id => document.getElementById(id);
   const show = (id, on) => $(id).classList.toggle("hide", !on);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-  if (SUPABASE_URL.startsWith("YOUR_")) {
-    show("setupView", true);
-  } else {
-    init();
-  }
+  if (SUPABASE_URL.startsWith("YOUR_")) show("setupView", true); else init();
 
   function init() {
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let rows = [];
+    let editId = null;
 
+    /* ---------- Auth ---------- */
     function render(session) {
       show("loginView", !session);
       show("appView", !!session);
-      if (session) search();
+      if (!session) closePopup();
     }
-
     db.auth.getSession().then(({ data }) => render(data.session));
     db.auth.onAuthStateChange((_e, session) => render(session));
 
@@ -124,46 +146,115 @@
     $("password").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
     $("logoutBtn").onclick = () => db.auth.signOut();
 
-    // Escape for safe HTML output
-    const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    /* ---------- Popup ---------- */
+    function openPopup() { show("popup", true); document.body.style.overflow = "hidden"; }
+    function closePopup() { show("popup", false); document.body.style.overflow = ""; editId = null; }
+    $("closeBtn").onclick = closePopup;
+    $("popup").addEventListener("click", e => { if (e.target === $("popup")) closePopup(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closePopup(); });
 
+    /* ---------- Search ---------- */
     async function search() {
-      const term = $("q").value.trim().replace(/[,()%]/g, " ");
-      let query = db.from("students").select("*").order("created_at", { ascending: false }).limit(100);
-      if (term) {
-        query = query.or(`name.ilike.%${term}%,phone.ilike.%${term}%,address.ilike.%${term}%`);
-      }
-      const { data, error } = await query;
-      if (error) { $("count").textContent = "දත්ත ලබාගත නොහැකි විය: " + error.message; return; }
-      $("count").textContent = `ප්‍රතිඵල ${data.length}`;
-      $("list").innerHTML = data.length ? data.map(s => `
-        <div class="stu">
-          <b>${esc(s.name)}</b>
-          <div class="meta">${esc(s.phone)}${s.phone && s.birthday ? " • " : ""}${esc(s.birthday)}</div>
-          <div class="meta">${esc(s.address)}</div>
-          <div>${esc(s.details)}</div>
-        </div>`).join("") : '<div class="meta">කිසිවක් හමු නොවීය.</div>';
+      const term = $("q").value.trim().replace(/[,()%]/g, " ").trim();
+      $("searchMsg").textContent = "";
+      if (!term) { $("searchMsg").textContent = "සෙවුම් පදයක් ඇතුළත් කරන්න."; return; }
+      const { data, error } = await db.from("students").select("*")
+        .or(`name.ilike.%${term}%,phone.ilike.%${term}%,address.ilike.%${term}%`)
+        .order("name").limit(100);
+      if (error) { $("searchMsg").textContent = "සෙවීම අසාර්ථකයි: " + error.message; return; }
+      rows = data; editId = null;
+      drawList();
+      openPopup();
+    }
+    $("searchBtn").onclick = search;
+    $("q").addEventListener("keydown", e => { if (e.key === "Enter") search(); });
+
+    function drawList() {
+      $("popMsg").textContent = "";
+      $("popTitle").textContent = `සෙවුම් ප්‍රතිඵල (${rows.length})`;
+      if (!rows.length) { $("list").innerHTML = '<div class="meta" style="padding:12px 0">කිසිවක් හමු නොවීය.</div>'; return; }
+      $("list").innerHTML = rows.map(s => s.id === editId ? editCard(s) : viewCard(s)).join("");
     }
 
-    let timer;
-    $("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(search, 300); });
+    const viewCard = s => `
+      <div class="stu">
+        <b>${esc(s.name)}</b>
+        <div class="meta">${esc(s.phone)}${s.phone && s.birthday ? " • " : ""}${esc(s.birthday)}</div>
+        <div class="meta">${esc(s.address)}</div>
+        <div>${esc(s.details)}</div>
+        <div class="acts">
+          <button class="sm ghost" data-act="edit" data-id="${s.id}">වෙනස් කරන්න</button>
+          <button class="sm danger" data-act="del" data-id="${s.id}">මකන්න</button>
+        </div>
+      </div>`;
 
+    const editCard = s => `
+      <div class="stu">
+        <label for="e_name">නම *</label><input id="e_name" value="${esc(s.name)}">
+        <label for="e_address">ලිපිනය</label><input id="e_address" value="${esc(s.address)}">
+        <label for="e_phone">දුරකථන අංකය</label><input id="e_phone" type="tel" value="${esc(s.phone)}">
+        <label for="e_birthday">උපන්දිනය</label><input id="e_birthday" type="date" value="${esc(s.birthday)}">
+        <label for="e_details">විස්තර</label><textarea id="e_details" rows="3">${esc(s.details)}</textarea>
+        <div class="acts">
+          <button class="sm" data-act="save" data-id="${s.id}">සුරකින්න</button>
+          <button class="sm ghost" data-act="cancel" data-id="${s.id}">අවලංගු</button>
+        </div>
+      </div>`;
+
+    /* ---------- Edit / Delete ---------- */
+    $("list").addEventListener("click", async e => {
+      const btn = e.target.closest("button[data-act]");
+      if (!btn) return;
+      const id = Number(btn.dataset.id);
+      const act = btn.dataset.act;
+
+      if (act === "edit") { editId = id; drawList(); return; }
+      if (act === "cancel") { editId = null; drawList(); return; }
+
+      if (act === "save") {
+        const name = $("e_name").value.trim();
+        if (!name) { $("popMsg").className = "msg err"; $("popMsg").textContent = "නම අනිවාර්යයි."; return; }
+        const upd = {
+          name,
+          address: $("e_address").value.trim() || null,
+          phone: $("e_phone").value.trim() || null,
+          birthday: $("e_birthday").value || null,
+          details: $("e_details").value.trim() || null
+        };
+        const { data, error } = await db.from("students").update(upd).eq("id", id).select();
+        if (error || !data.length) { $("popMsg").className = "msg err"; $("popMsg").textContent = "සුරැකීම අසාර්ථකයි" + (error ? ": " + error.message : "."); return; }
+        rows = rows.map(r => r.id === id ? data[0] : r);
+        editId = null; drawList();
+        $("popMsg").className = "msg ok"; $("popMsg").textContent = "යාවත්කාලීන කළා.";
+        return;
+      }
+
+      if (act === "del") {
+        const s = rows.find(r => r.id === id);
+        if (!confirm(`"${s.name}" මකන්නද? මෙය ආපසු හැරවිය නොහැක.`)) return;
+        const { data, error } = await db.from("students").delete().eq("id", id).select();
+        if (error || !data.length) { $("popMsg").className = "msg err"; $("popMsg").textContent = "මැකීම අසාර්ථකයි" + (error ? ": " + error.message : "."); return; }
+        rows = rows.filter(r => r.id !== id);
+        drawList();
+        $("popMsg").className = "msg ok"; $("popMsg").textContent = "මකා දැමුවා.";
+      }
+    });
+
+    /* ---------- Add ---------- */
     $("saveBtn").onclick = async () => {
       const msg = $("saveMsg");
       const name = $("f_name").value.trim();
       if (!name) { msg.className = "msg err"; msg.textContent = "නම අනිවාර්යයි."; return; }
-      const row = {
+      const { error } = await db.from("students").insert({
         name,
         address: $("f_address").value.trim() || null,
         phone: $("f_phone").value.trim() || null,
         birthday: $("f_birthday").value || null,
         details: $("f_details").value.trim() || null
-      };
-      const { error } = await db.from("students").insert(row);
+      });
       if (error) { msg.className = "msg err"; msg.textContent = "සුරැකීම අසාර්ථකයි: " + error.message; return; }
       msg.className = "msg ok"; msg.textContent = "සුරැකිණි.";
       $("addForm").reset();
-      search();
     };
   }
 </script>
