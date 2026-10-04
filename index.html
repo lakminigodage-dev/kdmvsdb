@@ -11,10 +11,16 @@
   body{margin:0;font-family:"Iskoola Pota","Noto Sans Sinhala",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
   .wrap{max-width:760px;margin:0 auto;padding:16px}
   h1{font-size:1.4rem;margin:8px 0 16px}
+  h3{font-size:1rem;margin:18px 0 0;color:var(--green);border-top:1px solid var(--line);padding-top:12px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
   label{display:block;font-size:.9rem;color:var(--muted);margin-top:10px}
-  input,textarea{width:100%;padding:10px;font:inherit;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
-  input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--green);outline-offset:1px}
+  input,textarea,select{width:100%;padding:10px;font:inherit;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+  input[type=checkbox]{width:auto;margin:5px 0 0;flex-shrink:0}
+  label.chk{display:flex;align-items:center;gap:6px;color:var(--ink);margin-top:12px}
+  .catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px;margin-top:6px}
+  .catgrid label{display:flex;align-items:flex-start;gap:8px;margin:0;color:var(--ink);padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:.9rem;cursor:pointer}
+  .catgrid label:has(input:checked){background:#e4f1ea;border-color:var(--green)}
+  input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--green);outline-offset:1px}
   button{font:inherit;padding:10px 18px;border:0;border-radius:6px;background:var(--green);color:#fff;cursor:pointer;margin-top:14px}
   button.ghost{background:transparent;color:var(--green);border:1px solid var(--green)}
   button.danger{background:var(--err)}
@@ -29,16 +35,49 @@
   .meta{color:var(--muted);font-size:.9rem}
   .hide{display:none !important}
   .setup code{background:#eef3ef;padding:2px 5px;border-radius:4px}
+  .tag{display:inline-block;background:#e4f1ea;color:var(--green);border-radius:999px;padding:1px 10px;font-size:.85rem;margin:2px 4px 2px 0}
+  .tag.warn{background:#fdecea;color:var(--err)}
+  .tag.date{background:#eef0f3;color:var(--ink)}
   /* popup */
   .overlay{position:fixed;inset:0;background:rgba(20,35,28,.55);display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;z-index:10}
-  .modal{background:var(--card);border-radius:12px;width:100%;max-width:640px;margin:auto;padding:16px}
+  .modal{background:var(--card);border-radius:12px;width:100%;max-width:720px;margin:auto;padding:16px}
+  .modal.wide{max-width:960px}
   .modal-head{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding-bottom:10px}
   .modal-head h2{font-size:1.1rem;margin:0}
   .modal-head button{margin:0}
-  .stu{border-bottom:1px solid var(--line);padding:12px 0}
+  .tools{display:flex;flex-wrap:wrap;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .tools button{margin:0}
+  .stu{border-bottom:2px solid var(--line);padding:14px 0;user-select:text;-webkit-user-select:text}
   .stu:last-child{border-bottom:0}
   .stu b{font-size:1.05rem}
-  .acts{display:flex;gap:8px;margin-top:8px}
+  .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .sesshead{margin-top:12px;font-size:.9rem;color:var(--green);font-weight:bold}
+  .sess{border-left:3px solid var(--green);background:#f7faf8;border-radius:0 8px 8px 0;padding:8px 12px;margin-top:8px;user-select:text;-webkit-user-select:text}
+  .sess.old{border-left-color:#aab8b0;background:#fafafa}
+  .sessbox{border:1px dashed var(--green);border-radius:8px;padding:4px 12px 12px;margin-top:8px}
+  .tblwrap{overflow-x:auto;user-select:text;-webkit-user-select:text}
+  table{border-collapse:collapse;width:100%;font-size:.9rem}
+  th,td{border:1px solid var(--line);padding:6px 8px;text-align:center}
+  td.l{text-align:left}
+  thead th{background:#e4f1ea}
+  tfoot td{font-weight:bold;background:#f3f7f4}
+  th.l{text-align:left}
+  .hdrblock{margin:8px 0 12px;line-height:1.8}
+  .hgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 10px}
+  .tag.obs{background:#fff4e0;color:#8a5a00}
+  .bignum{font-size:2.4rem;font-weight:bold;color:var(--green);line-height:1.2;margin-top:12px}
+  .repbox h2{font-size:1.2rem;margin:8px 0 0}
+  @media print{
+    @page{size:A4;margin:12mm}
+    body.printing table{font-size:11px}
+    body.printing th,body.printing td{border-color:#000;padding:5px 4px}
+    body.printing thead th,body.printing tfoot td{background:#fff}
+    body.printing{background:#fff}
+    body.printing .wrap{display:none !important}
+    body.printing .overlay{position:static;background:none;padding:0;display:block;overflow:visible}
+    body.printing .modal{box-shadow:none;max-width:none;padding:0;margin:0}
+    body.printing .modal-head,body.printing .tools,body.printing #popMsg{display:none !important}
+  }
 </style>
 </head>
 <body>
@@ -72,6 +111,22 @@
     </div>
 
     <div class="card">
+      <h2 style="font-size:1.1rem;margin:0">ගැටලු අනුව ළමුන් ගණන</h2>
+      <label for="pc">ගැටලුව තෝරන්න</label>
+      <select id="pc"></select>
+      <div class="row" style="margin-top:4px">
+        <div style="flex:1"><label for="pcFrom">සිට (මාසය — අවශ්‍ය නම්)</label><input id="pcFrom" type="month"></div>
+        <div style="flex:1"><label for="pcTo">දක්වා (මාසය — අවශ්‍ය නම්)</label><input id="pcTo" type="month"></div>
+      </div>
+      <div class="acts" style="margin-top:12px">
+        <button id="pcBtn" type="button" style="margin-top:0">ගණන බලන්න</button>
+        <button id="pcAllBtn" type="button" class="ghost" style="margin-top:0">සියලු ගැටලු හා ගණන (PDF / Copy)</button>
+      </div>
+      <div id="pcResult"></div>
+      <div id="pcMsg" class="msg err"></div>
+    </div>
+
+    <div class="card">
       <h2 style="font-size:1.1rem;margin:0">නව සිසුවා ඇතුළත් කරන්න</h2>
       <form id="addForm" onsubmit="return false">
         <label for="f_name">නම *</label>
@@ -84,9 +139,30 @@
         <input id="f_birthday" type="date">
         <label for="f_details">විස්තර</label>
         <textarea id="f_details" rows="3"></textarea>
+
+        <h3>පළමු උපදේශන සැසිය (අවශ්‍ය නම් පමණක්)</h3>
+        <div id="f_sess"></div>
+
         <button id="saveBtn" type="button">සුරකින්න</button>
         <div id="saveMsg" class="msg"></div>
       </form>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:1.1rem;margin:0">ගණන් සංඛ්‍යා ලේඛනය (PDF / Text)</h2>
+      <div class="meta">ලේඛනයේ ඉහළට යන තොරතුරු (මෙම උපාංගයේ ස්මරණයේ තැන්පත් වේ)</div>
+      <div class="hgrid">
+        <div><label for="h_school">පාසල</label><input id="h_school"></div>
+        <div><label for="h_division">අධ්‍යාපන කොට්ඨාසය</label><input id="h_division"></div>
+        <div><label for="h_zone">අධ්‍යාපන කලාපය</label><input id="h_zone"></div>
+        <div><label for="h_district">දිස්ත්‍රික්කය</label><input id="h_district"></div>
+        <div><label for="h_year">වර්ෂය</label><input id="h_year" inputmode="numeric"></div>
+      </div>
+      <label for="sumStart">ආරම්භක මාසය (මාස 4ක් පෙන්වයි)</label>
+      <input id="sumStart" type="month">
+      <label class="chk"><input id="onlyData" type="checkbox">දත්ත ඇති ගැටලු පේළි පමණක් පෙන්වන්න</label>
+      <button id="sumBtn" type="button">ලේඛනය සකසන්න</button>
+      <div id="sumMsg" class="msg err"></div>
     </div>
   </section>
 
@@ -97,12 +173,19 @@
   </section>
 </div>
 
-<!-- Search results popup -->
+<!-- Popup -->
 <div id="popup" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="popTitle">
-  <div class="modal">
+  <div class="modal" id="modal">
     <div class="modal-head">
       <h2 id="popTitle">සෙවුම් ප්‍රතිඵල</h2>
       <button id="closeBtn" class="ghost sm" type="button">වසන්න</button>
+    </div>
+    <div id="tools" class="tools">
+      <button id="copyLatest" class="sm" type="button">සියල්ල Copy (අලුත්ම සැසිය)</button>
+      <button id="copyHist" class="sm" type="button">සියල්ල Copy (සම්පූර්ණ ඉතිහාසය)</button>
+      <button id="copyTsv" class="sm ghost" type="button">Excel සඳහා Copy (Table)</button>
+      <button id="copyRep" class="sm hide" type="button">Text ලෙස Copy කරන්න</button>
+      <button id="pdfBtn" class="sm hide" type="button">PDF ලෙස සුරකින්න / Print</button>
     </div>
     <div id="popMsg" class="msg"></div>
     <div id="list"></div>
@@ -115,16 +198,119 @@
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ubml6bWNtanBucndjeXlkZ2RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNjM0NTksImV4cCI6MjEwNjYzOTQ1OX0.ziYPd6xfKapUvbKQLtOzU_XiW2j8vFv6jn0mHEbzmbM";
   // ▲▲ (anon key පමණක්; service_role key කිසි විටෙකත් නොදමන්න) ▲▲
 
+  const CATS = [
+    "මත්ද්‍රව්‍ය ඇබ්බැහි වීම","ප්‍රේම සම්බන්ධතා","තිර ඇබ්බැහි වීම","අන්තර්ජාල/සමාජ මාධ්‍ය ආශ්‍රිත ගැටලු",
+    "අධ්‍යාපන ගැටලු","මනෝවිද්‍යාත්මක ගැටලු","සමාජීය ගැටලු","ලිංගික ගැටලු","අඩු වයස් ගැබ්ගැනීම්",
+    "අපයෝජන සහ අපචාර","කායික දඬුවම්/මානසික දඬුවම්","සියදිවි නසා ගැනීමට උත්සාහ කිරීම්","ආර්ථික ගැටලු",
+    "පවුල් ගැටලු","ස්ත්‍රී, පුරුෂ සමාජභාවය ආශ්‍රිත ගැටලු","නව යොවුන් වියේ ගැටලු","සමවයස් කණ්ඩායම් ආශ්‍රිත ගැටලු",
+    "පාසල් නොපැමිණීම","විභාග ආශ්‍රිත ගැටලු","විනය මණ්ඩලය විසින් යොමු කරන ලද ගැටලු","කායික රෝග","වෙනත්"
+  ];
+  const OBS = {
+    o1: "උපදේශකවරයාට කළමණාකරණය කරගත හැක",
+    o2: "දෙමාපිය සහය අවශ්‍ය අතර දෙමාපියන් සම්බන්ධ කරගන්නා ලදී",
+    o3: "දෙමාපිය සහය අවශ්‍ය අතර දෙමාපියන් සම්බන්ධ කර ගැනීම දුෂ්කර වී ඇත",
+    o4: "පාසලේ සහය අවශ්‍යයි.",
+    o5: "පාසලේ සහය අවශ්‍යයි. යොමු කර ඇත.",
+    o6: "නීති සහය අවශ්‍යයි.",
+    o7: "නීති සහය අවශ්‍යයි. යොමු කර ඇත"
+  };
+  const OUTS = { resolved: "උපදේශකවරයා විසින් නිරාකරණය කරන ලදී", referred: "යොමු කිරීම් කරන ලදී" };
+
   const $ = id => document.getElementById(id);
   const show = (id, on) => $(id).classList.toggle("hide", !on);
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const today = () => new Date().toLocaleDateString("sv");
+  const obsOpts = sel => '<option value="">—</option>' +
+    Object.entries(OBS).map(([k, v]) => `<option value="${k}"${sel === k ? " selected" : ""}>${v}</option>`).join("");
+  const outOpts = sel => '<option value="">—</option>' +
+    Object.entries(OUTS).map(([k, v]) => `<option value="${k}"${sel === k ? " selected" : ""}>${v}</option>`).join("");
+
+  /* ---- Session form pieces (checkbox grid) ---- */
+  const catGrid = (p, sel) => `<div class="catgrid" id="${p}cats">` +
+    CATS.map((c, i) => `<label><input type="checkbox" value="${i + 1}"${(sel || []).includes(i + 1) ? " checked" : ""}><span>${i + 1}. ${esc(c)}</span></label>`).join("") + "</div>";
+
+  const sessForm = (p, s = {}) => `
+    <div class="sessbox">
+      <label for="${p}date">උපදේශන දිනය</label>
+      <input id="${p}date" type="date" value="${esc(s.session_date || today())}">
+      <label>ප්‍රධාන ගැටලු (එකකට වඩා තෝරා ගත හැක)</label>
+      ${catGrid(p, s.categories)}
+      <label for="${p}coth">"වෙනත්" තෝරා ඇත්නම්, ගැටලුවේ ස්වභාවය</label>
+      <input id="${p}coth" value="${esc(s.other_text)}">
+      <label for="${p}cout">ප්‍රතිඵලය</label>
+      <select id="${p}cout">${outOpts(s.outcome)}</select>
+      <label class="chk"><input id="${p}cfu" type="checkbox"${s.followup ? " checked" : ""}>පසුවිපරම්</label>
+      <label class="chk"><input id="${p}chv" type="checkbox"${s.home_visit ? " checked" : ""}>නිවාස නිරීක්ෂණය කළා</label>
+      <label for="${p}oty">නිරීක්ෂණය</label>
+      <select id="${p}oty">${obsOpts(s.obs_type)}</select>
+      <label for="${p}cobs">අමතර සටහන්</label>
+      <textarea id="${p}cobs" rows="3">${esc(s.observation)}</textarea>
+    </div>`;
+
+  const readSess = p => {
+    const categories = [...$(p + "cats").querySelectorAll("input:checked")].map(i => Number(i.value));
+    return {
+      session_date: $(p + "date").value || today(),
+      categories,
+      other_text: categories.includes(22) ? ($(p + "coth").value.trim() || null) : null,
+      outcome: $(p + "cout").value || null,
+      followup: $(p + "cfu").checked,
+      obs_type: $(p + "oty").value || null,
+      home_visit: $(p + "chv").checked,
+      observation: $(p + "cobs").value.trim() || null
+    };
+  };
+  const sessEmpty = v => !v.categories.length && !v.observation && !v.obs_type;
+
+  $("f_sess").innerHTML = sessForm("f_");
+  const HDR = ["h_school", "h_division", "h_zone", "h_district", "h_year"];
+  const saveHdr = () => { try { localStorage.setItem("schoolHeader", JSON.stringify(Object.fromEntries(HDR.map(i => [i, $(i).value])))); } catch (_) {} };
+  try { const o = JSON.parse(localStorage.getItem("schoolHeader") || "{}"); HDR.forEach(i => { if (o[i]) $(i).value = o[i]; }); } catch (_) {}
+  HDR.forEach(i => $(i).addEventListener("input", saveHdr));
+  $("pc").innerHTML = '<option value="">— ගැටලුවක් තෝරන්න —</option>' +
+    CATS.map((c, i) => `<option value="${i + 1}">${i + 1}. ${esc(c)}</option>`).join("");
+
+  /* ---- Text helpers ---- */
+  const catList = x => (x.categories || []).slice().sort((a, b) => a - b)
+    .map(c => c === 22 && x.other_text ? `22. වෙනත් (${x.other_text})` : `${c}. ${CATS[c - 1]}`);
+  const sessText = x => [
+    `උපදේශන දිනය: ${x.session_date ?? ""}`,
+    catList(x).length ? `ගැටලු: ${catList(x).join("; ")}` : "",
+    x.outcome ? `ප්‍රතිඵලය: ${OUTS[x.outcome]}` : "",
+    x.followup ? "පසුවිපරම්: ඔව්" : "",
+    x.home_visit ? "නිවාස නිරීක්ෂණය: කළා" : "",
+    x.obs_type ? `නිරීක්ෂණය: ${OBS[x.obs_type]}` : "",
+    x.observation ? `සටහන්: ${x.observation}` : ""
+  ].filter(Boolean).join("\n");
+  const sessAsc = st => (st.counseling_sessions || []).slice()
+    .sort((a, b) => String(a.session_date).localeCompare(String(b.session_date)) || a.id - b.id);
+  const basicText = s => [
+    `නම: ${s.name ?? ""}`,
+    s.phone ? `දුරකථන: ${s.phone}` : "",
+    s.birthday ? `උපන්දිනය: ${s.birthday}` : "",
+    s.address ? `ලිපිනය: ${s.address}` : "",
+    s.details ? `විස්තර: ${s.details}` : ""
+  ].filter(Boolean).join("\n");
+  const studentText = (st, mode) => {
+    const ss = sessAsc(st);
+    if (!ss.length) return basicText(st);
+    if (mode === "latest") return basicText(st) + "\n\n--- අලුත්ම උපදේශන සැසිය ---\n" + sessText(ss[ss.length - 1]);
+    return basicText(st) + `\n\n--- උපදේශන ඉතිහාසය (සැසි ${ss.length}) ---\n` +
+      ss.map((x, i) => `[සැසිය ${i + 1}]\n${sessText(x)}`).join("\n\n");
+  };
+  const tsvCell = v => String(v ?? "").replace(/[\t\r\n]+/g, " ");
 
   if (SUPABASE_URL.startsWith("YOUR_")) show("setupView", true); else init();
 
   function init() {
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SEL = "*, counseling_sessions(*)";
     let rows = [];
-    let editId = null;
+    let editId = null;            // student being edited
+    let form = null;              // { studentId, sid|null } session form open
+    let mode = "search";          // search | summary
+    let sumTsv = "", repText = "";
+    const expanded = new Set();   // students whose full history is shown
 
     /* ---------- Auth ---------- */
     function render(session) {
@@ -148,21 +334,63 @@
 
     /* ---------- Popup ---------- */
     function openPopup() { show("popup", true); document.body.style.overflow = "hidden"; }
-    function closePopup() { show("popup", false); document.body.style.overflow = ""; editId = null; }
+    function closePopup() { show("popup", false); document.body.style.overflow = ""; document.body.classList.remove("printing"); editId = null; form = null; }
     $("closeBtn").onclick = closePopup;
     $("popup").addEventListener("click", e => { if (e.target === $("popup")) closePopup(); });
     document.addEventListener("keydown", e => { if (e.key === "Escape") closePopup(); });
+
+    const flash = (ok, t) => { $("popMsg").className = "msg " + (ok ? "ok" : "err"); $("popMsg").textContent = t; };
+
+    /* ---------- Copy ---------- */
+    async function copyText(text, okMsg) {
+      let ok = false;
+      try { await navigator.clipboard.writeText(text); ok = true; }
+      catch (_) {
+        const ta = document.createElement("textarea");
+        ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        try { ok = document.execCommand("copy"); } catch (_) {}
+        ta.remove();
+      }
+      flash(ok, ok ? (okMsg || "Copy කළා.") : "Copy කිරීම අසාර්ථකයි. අකුරු තෝරා අතින් Copy කරන්න.");
+    }
+    const studentsTsv = () => {
+      const head = ["නම","දුරකථන","උපන්දිනය","ලිපිනය","විස්තර","සැසි දිනය","ගැටලු","ප්‍රතිඵලය","පසුවිපරම්","නිවාස නිරීක්ෂණය","නිරීක්ෂණය","සටහන්"];
+      const body = [];
+      rows.forEach(s => {
+        const base = [s.name, s.phone, s.birthday, s.address, s.details];
+        const ss = sessAsc(s);
+        if (!ss.length) body.push([...base, "", "", "", "", "", "", ""]);
+        ss.forEach(x => body.push([...base, x.session_date, catList(x).join("; "),
+          x.outcome ? OUTS[x.outcome] : "", x.followup ? "ඔව්" : "", x.home_visit ? "ඔව්" : "", x.obs_type ? OBS[x.obs_type] : "", x.observation]));
+      });
+      return [head, ...body].map(l => l.map(tsvCell).join("\t")).join("\n");
+    };
+    const allText = m => rows.map(s => studentText(s, m)).join("\n\n==========\n\n");
+
+    $("copyLatest").onclick = () => copyText(allText("latest"), `ප්‍රතිඵල ${rows.length} (අලුත්ම සැසිය) Copy කළා.`);
+    $("copyHist").onclick = () => copyText(allText("all"), `ප්‍රතිඵල ${rows.length} (සම්පූර්ණ ඉතිහාසය) Copy කළා.`);
+    $("copyTsv").onclick = () => copyText(mode === "summary" ? sumTsv : studentsTsv(),
+      mode === "summary" ? "සාරාංශ වගුව Copy කළා." : "Table එක Copy කළා. Excel/Sheets වෙත Paste කරන්න (සැසියකට පේළියක්).");
+
+    function setTools(m) {
+      show("copyLatest", m === "search"); show("copyHist", m === "search");
+      show("copyTsv", m !== "report"); show("copyRep", m === "report"); show("pdfBtn", m === "report" || m === "summary");
+      $("copyTsv").textContent = m === "search" ? "Excel සඳහා Copy (Table)" : "වගුව Copy කරන්න";
+    }
 
     /* ---------- Search ---------- */
     async function search() {
       const term = $("q").value.trim().replace(/[,()%]/g, " ").trim();
       $("searchMsg").textContent = "";
       if (!term) { $("searchMsg").textContent = "සෙවුම් පදයක් ඇතුළත් කරන්න."; return; }
-      const { data, error } = await db.from("students").select("*")
+      const { data, error } = await db.from("students").select(SEL)
         .or(`name.ilike.%${term}%,phone.ilike.%${term}%,address.ilike.%${term}%`)
         .order("name").limit(100);
       if (error) { $("searchMsg").textContent = "සෙවීම අසාර්ථකයි: " + error.message; return; }
-      rows = data; editId = null;
+      rows = data; editId = null; form = null; mode = "search";
+      $("modal").classList.remove("wide");
+      setTools("search");
       drawList();
       openPopup();
     }
@@ -172,21 +400,65 @@
     function drawList() {
       $("popMsg").textContent = "";
       $("popTitle").textContent = `සෙවුම් ප්‍රතිඵල (${rows.length})`;
+      show("tools", rows.length > 0);
       if (!rows.length) { $("list").innerHTML = '<div class="meta" style="padding:12px 0">කිසිවක් හමු නොවීය.</div>'; return; }
       $("list").innerHTML = rows.map(s => s.id === editId ? editCard(s) : viewCard(s)).join("");
     }
 
-    const viewCard = s => `
-      <div class="stu">
-        <b>${esc(s.name)}</b>
-        <div class="meta">${esc(s.phone)}${s.phone && s.birthday ? " • " : ""}${esc(s.birthday)}</div>
-        <div class="meta">${esc(s.address)}</div>
-        <div>${esc(s.details)}</div>
+    const sessView = (x, st, isNew) => `
+      <div class="sess${isNew ? "" : " old"}">
+        <div>
+          <span class="tag date">${esc(x.session_date)}</span>
+          ${catList(x).map(c => `<span class="tag">${esc(c)}</span>`).join("")}
+          ${x.outcome ? `<span class="tag">${esc(OUTS[x.outcome])}</span>` : ""}
+          ${x.followup ? '<span class="tag warn">පසුවිපරම්</span>' : ""}
+          ${x.home_visit ? '<span class="tag">නිවාස නිරීක්ෂණය</span>' : ""}
+          ${x.obs_type ? `<span class="tag obs">${esc(OBS[x.obs_type])}</span>` : ""}
+        </div>
+        ${x.observation ? `<div class="meta">සටහන්: ${esc(x.observation)}</div>` : ""}
         <div class="acts">
-          <button class="sm ghost" data-act="edit" data-id="${s.id}">වෙනස් කරන්න</button>
-          <button class="sm danger" data-act="del" data-id="${s.id}">මකන්න</button>
+          <button class="sm ghost" data-act="scopy" data-id="${st.id}" data-sid="${x.id}">Copy</button>
+          <button class="sm ghost" data-act="sedit" data-id="${st.id}" data-sid="${x.id}">වෙනස් කරන්න</button>
+          <button class="sm danger" data-act="sdel" data-id="${st.id}" data-sid="${x.id}">මකන්න</button>
         </div>
       </div>`;
+
+    const sessEditBox = (st, x) => `
+      <div>${sessForm("s_", x || {})}
+        <div class="acts">
+          <button class="sm" data-act="ssave" data-id="${st.id}" data-sid="${x ? x.id : ""}">සුරකින්න</button>
+          <button class="sm ghost" data-act="scancel" data-id="${st.id}">අවලංගු</button>
+        </div>
+      </div>`;
+
+    const viewCard = st => {
+      const ss = sessAsc(st).reverse();            // newest first
+      const editingHere = form && form.studentId === st.id;
+      const open = expanded.has(st.id) || (editingHere && form.sid !== null);
+      const shown = open ? ss : ss.slice(0, 1);
+      const sessHtml = shown.map((x, i) =>
+        editingHere && form.sid === x.id ? sessEditBox(st, x) : sessView(x, st, ss[0] === x)).join("");
+      return `
+      <div class="stu">
+        <b>${esc(st.name)}</b>
+        <div class="meta">${esc(st.phone)}${st.phone && st.birthday ? " • " : ""}${esc(st.birthday)}</div>
+        <div class="meta">${esc(st.address)}</div>
+        <div>${esc(st.details)}</div>
+
+        <div class="sesshead">උපදේශන සැසි (${ss.length})${ss.length ? (open ? " — නවතම සිට" : " — අලුත්ම සැසිය") : ""}</div>
+        ${editingHere && form.sid === null ? sessEditBox(st, null) : ""}
+        ${sessHtml || (editingHere && form.sid === null ? "" : '<div class="meta">සැසි නැත.</div>')}
+        ${ss.length > 1 ? `<div class="acts"><button class="sm ghost" data-act="toggle" data-id="${st.id}">${open ? "පැරණි සැසි සඟවන්න" : "පැරණි සැසි " + (ss.length - 1) + "ක් බලන්න"}</button></div>` : ""}
+
+        <div class="acts" style="margin-top:12px">
+          <button class="sm" data-act="snew" data-id="${st.id}">+ නව සැසියක්</button>
+          <button class="sm" data-act="copy" data-id="${st.id}" data-mode="latest">Copy (අලුත්ම)</button>
+          <button class="sm" data-act="copy" data-id="${st.id}" data-mode="all">Copy (සම්පූර්ණ ඉතිහාසය)</button>
+          <button class="sm ghost" data-act="edit" data-id="${st.id}">විස්තර වෙනස් කරන්න</button>
+          <button class="sm danger" data-act="del" data-id="${st.id}">මකන්න</button>
+        </div>
+      </div>`;
+    };
 
     const editCard = s => `
       <div class="stu">
@@ -201,19 +473,34 @@
         </div>
       </div>`;
 
-    /* ---------- Edit / Delete ---------- */
+    const setSessions = (stId, fn) => {
+      rows = rows.map(r => r.id === stId ? { ...r, counseling_sessions: fn(r.counseling_sessions || []) } : r);
+    };
+
+    /* ---------- Actions ---------- */
     $("list").addEventListener("click", async e => {
       const btn = e.target.closest("button[data-act]");
       if (!btn) return;
       const id = Number(btn.dataset.id);
+      const sid = btn.dataset.sid ? Number(btn.dataset.sid) : null;
       const act = btn.dataset.act;
+      const st = rows.find(r => r.id === id);
 
-      if (act === "edit") { editId = id; drawList(); return; }
+      if (act === "copy") { copyText(studentText(st, btn.dataset.mode), btn.dataset.mode === "all" ? "සම්පූර්ණ ඉතිහාසය Copy කළා." : "අලුත්ම තොරතුරු Copy කළා."); return; }
+      if (act === "scopy") {
+        const x = st.counseling_sessions.find(y => y.id === sid);
+        copyText(`නම: ${st.name}\n${sessText(x)}`, "සැසිය Copy කළා."); return;
+      }
+      if (act === "toggle") { expanded.has(id) ? expanded.delete(id) : expanded.add(id); drawList(); return; }
+      if (act === "edit") { editId = id; form = null; drawList(); return; }
       if (act === "cancel") { editId = null; drawList(); return; }
+      if (act === "snew") { form = { studentId: id, sid: null }; editId = null; drawList(); return; }
+      if (act === "sedit") { form = { studentId: id, sid }; editId = null; drawList(); return; }
+      if (act === "scancel") { form = null; drawList(); return; }
 
       if (act === "save") {
         const name = $("e_name").value.trim();
-        if (!name) { $("popMsg").className = "msg err"; $("popMsg").textContent = "නම අනිවාර්යයි."; return; }
+        if (!name) { flash(false, "නම අනිවාර්යයි."); return; }
         const upd = {
           name,
           address: $("e_address").value.trim() || null,
@@ -221,22 +508,42 @@
           birthday: $("e_birthday").value || null,
           details: $("e_details").value.trim() || null
         };
-        const { data, error } = await db.from("students").update(upd).eq("id", id).select();
-        if (error || !data.length) { $("popMsg").className = "msg err"; $("popMsg").textContent = "සුරැකීම අසාර්ථකයි" + (error ? ": " + error.message : "."); return; }
+        const { data, error } = await db.from("students").update(upd).eq("id", id).select(SEL);
+        if (error || !data.length) { flash(false, "සුරැකීම අසාර්ථකයි" + (error ? ": " + error.message : ".")); return; }
         rows = rows.map(r => r.id === id ? data[0] : r);
-        editId = null; drawList();
-        $("popMsg").className = "msg ok"; $("popMsg").textContent = "යාවත්කාලීන කළා.";
+        editId = null; drawList(); flash(true, "යාවත්කාලීන කළා.");
+        return;
+      }
+
+      if (act === "ssave") {
+        const v = readSess("s_");
+        if (sessEmpty(v)) { flash(false, "අවම වශයෙන් එක් ගැටලුවක් තෝරන්න, නැතහොත් නිරීක්ෂණයක් ඇතුළත් කරන්න."); return; }
+        const q = sid
+          ? db.from("counseling_sessions").update(v).eq("id", sid).select()
+          : db.from("counseling_sessions").insert({ ...v, student_id: id }).select();
+        const { data, error } = await q;
+        if (error || !data.length) { flash(false, "සුරැකීම අසාර්ථකයි" + (error ? ": " + error.message : ".")); return; }
+        setSessions(id, a => sid ? a.map(y => y.id === sid ? data[0] : y) : [...a, data[0]]);
+        form = null; drawList(); flash(true, sid ? "සැසිය යාවත්කාලීන කළා." : "නව සැසිය එකතු කළා. පැරණි සැසි ඉතිහාසයේ ආරක්ෂිතව ඇත.");
+        return;
+      }
+
+      if (act === "sdel") {
+        if (!confirm("මෙම සැසිය මකන්නද? මෙය ආපසු හැරවිය නොහැක.")) return;
+        const { data, error } = await db.from("counseling_sessions").delete().eq("id", sid).select();
+        if (error || !data.length) { flash(false, "මැකීම අසාර්ථකයි" + (error ? ": " + error.message : ".")); return; }
+        setSessions(id, a => a.filter(y => y.id !== sid));
+        form = null; drawList(); flash(true, "සැසිය මකා දැමුවා.");
         return;
       }
 
       if (act === "del") {
-        const s = rows.find(r => r.id === id);
-        if (!confirm(`"${s.name}" මකන්නද? මෙය ආපසු හැරවිය නොහැක.`)) return;
+        const n = (st.counseling_sessions || []).length;
+        if (!confirm(`"${st.name}" සහ ඔහුගේ/ඇයගේ උපදේශන සැසි ${n}ම මකන්නද? මෙය ආපසු හැරවිය නොහැක.`)) return;
         const { data, error } = await db.from("students").delete().eq("id", id).select();
-        if (error || !data.length) { $("popMsg").className = "msg err"; $("popMsg").textContent = "මැකීම අසාර්ථකයි" + (error ? ": " + error.message : "."); return; }
+        if (error || !data.length) { flash(false, "මැකීම අසාර්ථකයි" + (error ? ": " + error.message : ".")); return; }
         rows = rows.filter(r => r.id !== id);
-        drawList();
-        $("popMsg").className = "msg ok"; $("popMsg").textContent = "මකා දැමුවා.";
+        drawList(); flash(true, "මකා දැමුවා.");
       }
     });
 
@@ -245,16 +552,173 @@
       const msg = $("saveMsg");
       const name = $("f_name").value.trim();
       if (!name) { msg.className = "msg err"; msg.textContent = "නම අනිවාර්යයි."; return; }
-      const { error } = await db.from("students").insert({
+      const { data, error } = await db.from("students").insert({
         name,
         address: $("f_address").value.trim() || null,
         phone: $("f_phone").value.trim() || null,
         birthday: $("f_birthday").value || null,
         details: $("f_details").value.trim() || null
-      });
+      }).select().single();
       if (error) { msg.className = "msg err"; msg.textContent = "සුරැකීම අසාර්ථකයි: " + error.message; return; }
+      const v = readSess("f_");
+      if (!sessEmpty(v)) {
+        const { error: e2 } = await db.from("counseling_sessions").insert({ ...v, student_id: data.id });
+        if (e2) { msg.className = "msg err"; msg.textContent = "සිසුවා සුරැකිණි, නමුත් සැසිය සුරැකීම අසාර්ථකයි: " + e2.message; return; }
+      }
       msg.className = "msg ok"; msg.textContent = "සුරැකිණි.";
       $("addForm").reset();
+    };
+
+    /* ---------- Pagination helper (1000-row limit) ---------- */
+    async function fetchAll(make) {
+      const out = [], size = 1000;
+      for (let from = 0; ; from += size) {
+        const { data, error } = await make().range(from, from + size - 1);
+        if (error) return { error };
+        out.push(...data);
+        if (data.length < size) break;
+      }
+      return { data: out };
+    }
+
+    /* ---------- Counts by problem ---------- */
+    function periodQ(q) {
+      const f = $("pcFrom").value, t = $("pcTo").value;
+      if (f) q = q.gte("session_date", f + "-01");
+      if (t) {
+        const [y, m] = t.split("-").map(Number);
+        const d = new Date(y, m, 1);
+        q = q.lt("session_date", `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`);
+      }
+      return q;
+    }
+    const periodLabel = () => {
+      const f = $("pcFrom").value, t = $("pcTo").value;
+      if (!f && !t) return "";
+      return ` (${f ? f + " සිට " : ""}${t ? t + " දක්වා" : ""})`.replace(" සිට )", " සිට)");
+    };
+    async function loadCounts() {
+      const { data, error } = await fetchAll(() =>
+        periodQ(db.from("counseling_sessions").select("id,student_id,categories,session_date")).order("id"));
+      if (error) return { error };
+      const sets = CATS.map(() => new Set()), any = new Set();
+      data.forEach(r => (r.categories || []).forEach(c => {
+        if (sets[c - 1]) { sets[c - 1].add(r.student_id); any.add(r.student_id); }
+      }));
+      return { sets, any };
+    }
+
+    $("pcBtn").onclick = async () => {
+      $("pcMsg").textContent = ""; $("pcResult").innerHTML = "";
+      const c = Number($("pc").value);
+      if (!c) { $("pcMsg").textContent = "ගැටලුවක් තෝරන්න."; return; }
+      const r = await loadCounts();
+      if (r.error) { $("pcMsg").textContent = "අසාර්ථකයි: " + r.error.message; return; }
+      $("pcResult").innerHTML = `<div class="bignum">${r.sets[c - 1].size}</div>
+        <div class="meta">${esc(c + ". " + CATS[c - 1])} — ළමුන් ගණන${esc(periodLabel())}</div>`;
+    };
+
+    $("pcAllBtn").onclick = async () => {
+      $("pcMsg").textContent = "";
+      const r = await loadCounts();
+      if (r.error) { $("pcMsg").textContent = "අසාර්ථකයි: " + r.error.message; return; }
+      repText = ["ගැටලු අනුව ළමුන් ගණන", `දිනය: ${today()}${periodLabel()}`, "",
+        ...CATS.map((n, i) => `${i + 1}. ${n} – ${r.sets[i].size}`), "",
+        `ගැටලුවක් ඇති මුළු ළමුන් ගණන: ${r.any.size}`].join("\n");
+      $("list").innerHTML = `<div class="repbox">
+        <h2>ගැටලු අනුව ළමුන් ගණන</h2>
+        <div class="meta">දිනය: ${esc(today())}${esc(periodLabel())}</div>
+        <div class="tblwrap" style="margin-top:10px"><table>
+          <thead><tr><th>#</th><th class="l">ගැටලුව</th><th>ළමුන් ගණන</th></tr></thead>
+          <tbody>${CATS.map((n, i) => `<tr><td>${i + 1}</td><td class="l">${esc(n)}</td><td>${r.sets[i].size}</td></tr>`).join("")}</tbody>
+          <tfoot><tr><td></td><td class="l">ගැටලුවක් ඇති මුළු ළමුන් ගණන</td><td>${r.any.size}</td></tr></tfoot>
+        </table></div>
+        <div class="meta" style="margin-top:8px">සටහන: එක් ළමයෙකුට ගැටලු කිහිපයක් තිබිය හැකි බැවින්, ගැටලු අනුව ගණන්වල එකතුව මුළු ළමුන් ගණනට වඩා වැඩි විය හැක.</div>
+      </div>`;
+      mode = "report"; editId = null; form = null;
+      $("popMsg").textContent = "";
+      $("popTitle").textContent = "ගැටලු අනුව ළමුන් ගණන";
+      $("modal").classList.remove("wide");
+      show("tools", true); setTools("report");
+      openPopup();
+    };
+    $("copyRep").onclick = () => copyText(repText, "Text ලෙස Copy කළා.");
+    $("pdfBtn").onclick = () => {
+      document.body.classList.add("printing");
+      window.print(); // Print dialog හි "Save as PDF" තෝරන්න
+    };
+    window.addEventListener("afterprint", () => document.body.classList.remove("printing"));
+
+    /* ---------- Statistics sheet (PDF) ---------- */
+    const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    $("sumBtn").onclick = async () => {
+      const v = $("sumStart").value; // YYYY-MM
+      $("sumMsg").textContent = "";
+      if (!v) { $("sumMsg").textContent = "ආරම්භක මාසය තෝරන්න."; return; }
+      const [y, m] = v.split("-").map(Number);
+      const mm = [0, 1, 2, 3].map(i => new Date(y, m - 1 + i, 1));
+      const months = mm.map(d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+      const labels = mm.map(d => `${MON[d.getMonth()]} ${d.getFullYear()}`);
+      const endD = new Date(y, m - 1 + 4, 1);
+      const end = `${endD.getFullYear()}-${String(endD.getMonth() + 1).padStart(2, "0")}-01`;
+      const { data, error } = await fetchAll(() => db.from("counseling_sessions")
+        .select("id,categories,session_date,outcome,followup,home_visit")
+        .gte("session_date", months[0] + "-01").lt("session_date", end).order("id"));
+      if (error) { $("sumMsg").textContent = "අසාර්ථකයි: " + error.message; return; }
+
+      const blank = () => ({ m: [0, 0, 0, 0], res: 0, ref: 0, fu: 0, hv: 0 });
+      const T = CATS.map(blank), S = blank();
+      const add = (t, i, r) => {
+        t.m[i]++;
+        if (r.outcome === "resolved") t.res++;
+        if (r.outcome === "referred") t.ref++;
+        if (r.followup) t.fu++;
+        if (r.home_visit) t.hv++;
+      };
+      data.forEach(r => {
+        const i = months.indexOf(String(r.session_date).slice(0, 7)); if (i < 0) return;
+        add(S, i, r);
+        (r.categories || []).forEach(c => { if (T[c - 1]) add(T[c - 1], i, r); });
+      });
+      const nums = t => [...t.m, t.res, t.ref, t.fu, t.hv];
+      const has = t => nums(t).some(n => n > 0);
+      const colSum = fn => T.reduce((a, t) => a + fn(t), 0);
+
+      if (!$("h_year").value.trim()) { $("h_year").value = String(y); saveHdr(); }
+      const hdr = [
+        `පාසල - ${$("h_school").value.trim()}`,
+        `අධ්‍යාපන කොට්ඨාසය - ${$("h_division").value.trim()}`,
+        `අධ්‍යාපන කලාපය - ${$("h_zone").value.trim()}`,
+        `දිස්ත්‍රික්කය - ${$("h_district").value.trim()}`,
+        `වර්ෂය - ${$("h_year").value.trim()}`
+      ];
+      const head = ["ප්‍රශ්නය", ...labels, "නිරාක. කළ", "යොමු කළ", "පසු විපරම", "නිවාස නිරීක්ෂණ"];
+      const only = $("onlyData").checked;
+      const body = [];
+      CATS.forEach((c, i) => {
+        if (has(T[i])) body.push([c, ...nums(T[i])]);
+        else if (!only) body.push([c, "", "", "", "", "", "", "", ""]);
+      });
+      const totRow = ["එකතුව (ගැටලු අනුව)", ...[0, 1, 2, 3].map(k => colSum(t => t.m[k])),
+        colSum(t => t.res), colSum(t => t.ref), colSum(t => t.fu), colSum(t => t.hv)];
+      const sessRow = ["සැසි ගණන (අද්විතීය)", ...nums(S)];
+      sumTsv = [...hdr, "", head.join("\t"), ...[...body, totRow, sessRow].map(l => l.map(tsvCell).join("\t"))].join("\n");
+
+      const tr = (l, tag) => `<tr>${l.map((c, j) => `<${tag}${j === 0 ? ' class="l"' : ""}>${esc(c)}</${tag}>`).join("")}</tr>`;
+      $("list").innerHTML = `<div class="repbox">
+        <div class="hdrblock">${hdr.map(l => `<div>${esc(l)}</div>`).join("")}</div>
+        <div class="tblwrap"><table>
+          <thead>${tr(head, "th")}</thead>
+          <tbody>${body.map(l => tr(l, "td")).join("")}</tbody>
+          <tfoot>${tr(totRow, "td")}${tr(sessRow, "td")}</tfoot></table></div>
+        <div class="meta" style="margin-top:8px">සටහන: එක් සැසියක ගැටලු කිහිපයක් තෝරා ඇත්නම් එක් එක් ගැටලුව යටතේ ගණන් වේ. එබැවින් "එකතුව (ගැටලු අනුව)" සැසි ගණනට වඩා වැඩි විය හැක.</div>
+      </div>`;
+      mode = "summary"; editId = null; form = null;
+      $("popMsg").textContent = "";
+      $("popTitle").textContent = `ගණන් සංඛ්‍යා ලේඛනය (${labels[0]} – ${labels[3]})`;
+      $("modal").classList.add("wide");
+      show("tools", true); setTools("summary");
+      openPopup();
     };
   }
 </script>
