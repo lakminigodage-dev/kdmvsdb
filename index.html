@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>සිසු දත්ත පද්ධතිය</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+  :root{--bg:#f3f7f4;--card:#fff;--ink:#1d2b24;--muted:#5c6b63;--green:#2f7d5b;--line:#d5e0d9;--err:#b3261e}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Iskoola Pota","Noto Sans Sinhala",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:16px}
+  h1{font-size:1.4rem;margin:8px 0 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+  label{display:block;font-size:.9rem;color:var(--muted);margin-top:10px}
+  input,textarea{width:100%;padding:10px;font:inherit;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+  input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--green);outline-offset:1px}
+  button{font:inherit;padding:10px 18px;border:0;border-radius:6px;background:var(--green);color:#fff;cursor:pointer;margin-top:14px}
+  button.ghost{background:transparent;color:var(--green);border:1px solid var(--green)}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .top button{margin:0}
+  .msg{margin-top:10px;font-size:.9rem}
+  .err{color:var(--err)} .ok{color:var(--green)}
+  .stu{border-top:1px solid var(--line);padding:12px 0}
+  .stu:first-child{border-top:0}
+  .stu b{font-size:1.05rem}
+  .meta{color:var(--muted);font-size:.9rem}
+  .hide{display:none}
+  .setup code{background:#eef3ef;padding:2px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Login -->
+  <section id="loginView" class="card hide">
+    <h1>ඇතුල් වන්න</h1>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="username">
+    <label for="password">මුරපදය</label>
+    <input id="password" type="password" autocomplete="current-password">
+    <button id="loginBtn">ඇතුල් වන්න</button>
+    <div id="loginMsg" class="msg err"></div>
+  </section>
+
+  <!-- App -->
+  <section id="appView" class="hide">
+    <div class="top">
+      <h1>සිසු දත්ත පද්ධතිය</h1>
+      <button id="logoutBtn" class="ghost">ඉවත් වන්න</button>
+    </div>
+
+    <div class="card">
+      <label for="q" style="margin-top:0">සොයන්න (නම / දුරකථන / ලිපිනය)</label>
+      <input id="q" type="search" placeholder="උදා: නිමල්">
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:1.1rem;margin:0">නව සිසුවා ඇතුළත් කරන්න</h2>
+      <form id="addForm" onsubmit="return false">
+        <label for="f_name">නම *</label>
+        <input id="f_name" required>
+        <label for="f_address">ලිපිනය</label>
+        <input id="f_address">
+        <label for="f_phone">දුරකථන අංකය</label>
+        <input id="f_phone" type="tel" inputmode="tel">
+        <label for="f_birthday">උපන්දිනය</label>
+        <input id="f_birthday" type="date">
+        <label for="f_details">විස්තර</label>
+        <textarea id="f_details" rows="3"></textarea>
+        <button id="saveBtn" type="button">සුරකින්න</button>
+        <div id="saveMsg" class="msg"></div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div id="count" class="meta"></div>
+      <div id="list"></div>
+    </div>
+  </section>
+
+  <!-- Setup warning -->
+  <section id="setupView" class="card setup hide">
+    <h1>සැකසුම අවශ්‍යයි</h1>
+    <p>ගොනුවේ ඉහළ ඇති <code>SUPABASE_URL</code> සහ <code>SUPABASE_ANON_KEY</code> ඔබේ Supabase project අගයන්ගෙන් පුරවන්න.</p>
+  </section>
+</div>
+
+<script>
+  // ▼▼ ඔබේ Supabase project අගයන් මෙහි දමන්න (Project Settings → API) ▼▼
+  const SUPABASE_URL = "https://nnnizmcmjpnrwcyydgdh.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ubml6bWNtanBucndjeXlkZ2RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNjM0NTksImV4cCI6MjEwNjYzOTQ1OX0.ziYPd6xfKapUvbKQLtOzU_XiW2j8vFv6jn0mHEbzmbM";
+  // ▲▲ (anon key පමණක් භාවිතා කරන්න; service_role key කිසි විටෙකත් නොදමන්න) ▲▲
+
+  const $ = id => document.getElementById(id);
+  const show = (id, on) => $(id).classList.toggle("hide", !on);
+
+  if (SUPABASE_URL.startsWith("YOUR_")) {
+    show("setupView", true);
+  } else {
+    init();
+  }
+
+  function init() {
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function render(session) {
+      show("loginView", !session);
+      show("appView", !!session);
+      if (session) search();
+    }
+
+    db.auth.getSession().then(({ data }) => render(data.session));
+    db.auth.onAuthStateChange((_e, session) => render(session));
+
+    $("loginBtn").onclick = async () => {
+      $("loginMsg").textContent = "";
+      const { error } = await db.auth.signInWithPassword({
+        email: $("email").value.trim(),
+        password: $("password").value
+      });
+      if (error) $("loginMsg").textContent = "Email හෝ මුරපදය වැරදියි.";
+    };
+    $("password").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
+    $("logoutBtn").onclick = () => db.auth.signOut();
+
+    // Escape for safe HTML output
+    const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+    async function search() {
+      const term = $("q").value.trim().replace(/[,()%]/g, " ");
+      let query = db.from("students").select("*").order("created_at", { ascending: false }).limit(100);
+      if (term) {
+        query = query.or(`name.ilike.%${term}%,phone.ilike.%${term}%,address.ilike.%${term}%`);
+      }
+      const { data, error } = await query;
+      if (error) { $("count").textContent = "දත්ත ලබාගත නොහැකි විය: " + error.message; return; }
+      $("count").textContent = `ප්‍රතිඵල ${data.length}`;
+      $("list").innerHTML = data.length ? data.map(s => `
+        <div class="stu">
+          <b>${esc(s.name)}</b>
+          <div class="meta">${esc(s.phone)}${s.phone && s.birthday ? " • " : ""}${esc(s.birthday)}</div>
+          <div class="meta">${esc(s.address)}</div>
+          <div>${esc(s.details)}</div>
+        </div>`).join("") : '<div class="meta">කිසිවක් හමු නොවීය.</div>';
+    }
+
+    let timer;
+    $("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(search, 300); });
+
+    $("saveBtn").onclick = async () => {
+      const msg = $("saveMsg");
+      const name = $("f_name").value.trim();
+      if (!name) { msg.className = "msg err"; msg.textContent = "නම අනිවාර්යයි."; return; }
+      const row = {
+        name,
+        address: $("f_address").value.trim() || null,
+        phone: $("f_phone").value.trim() || null,
+        birthday: $("f_birthday").value || null,
+        details: $("f_details").value.trim() || null
+      };
+      const { error } = await db.from("students").insert(row);
+      if (error) { msg.className = "msg err"; msg.textContent = "සුරැකීම අසාර්ථකයි: " + error.message; return; }
+      msg.className = "msg ok"; msg.textContent = "සුරැකිණි.";
+      $("addForm").reset();
+      search();
+    };
+  }
+</script>
+</body>
+</html>
